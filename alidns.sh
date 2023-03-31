@@ -5,8 +5,20 @@ if ! command -v aliyun >/dev/null; then
 	exit 1
 fi
 
-DOMAIN=$(expr match "$CERTBOT_DOMAIN" '.*\.\(.*\..*\)')
-SUB_DOMAIN=$(expr match "$CERTBOT_DOMAIN" '\(.*\)\..*\..*')
+# 获取各级域名信息,用于适配阿里云api;当前仅支持2级泛域名证书或3级泛域名证书的申请
+DOT_SIZE=$(echo $CERTBOT_DOMAIN|grep -o '\.'|wc -l)
+echo $DOT_SIZE
+if ((1 == $DOT_SIZE)); then
+  DOMAIN=$(expr match "$CERTBOT_DOMAIN" '.*\.\(.*\..*\)')
+  SUB_DOMAIN=$(expr match "$CERTBOT_DOMAIN" '\(.*\)\..*\..*')
+elif ((2 == $DOT_SIZE)); then
+  DOMAIN=$(expr match "$CERTBOT_DOMAIN" '.*\.\(.*\..*\..*\)')
+  SUB_DOMAIN=$(expr match "$CERTBOT_DOMAIN" '\(.*\)\..*\..*\..*')
+else
+  echo "不支持: " $CERTBOT_DOMAIN
+  exit 1
+fi
+
 if [ -z $DOMAIN ]; then
     DOMAIN=$CERTBOT_DOMAIN
 fi
